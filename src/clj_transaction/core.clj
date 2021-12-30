@@ -19,29 +19,17 @@
     (vector? binding) [(first binding) `(~'find-maps ~coll ~match)]
     :else [binding `(~'find-one-as-map ~coll ~match)]))
 
-(defn- update-binding [coll match]
+(defn update-match [coll match m]
   (if match
-    `(fn [doc#] (update ~coll ~match doc#))
-    `(fn [match# doc#] (update ~coll match# doc#))))
-(defn- update-multi-binding [coll match]
-  (if match
-    `(fn [doc#] (update ~coll ~match doc# {:multi true}))
-    `(fn [match# doc#] (update ~coll match# doc# {:multi true}))))
-(defn- upsert-binding [coll match]
-  (if match
-    `(fn [doc#] (update ~coll ~match doc# {:upsert true}))
-    `(fn [match# doc#] (update ~coll match# doc# {:upsert true}))))
-(defn- upsert-multi-binding [coll match]
-  (if match
-    `(fn [doc#] (update ~coll ~match doc# {:upsert true :multi true}))
-    `(fn [match# doc#] (update ~coll match# doc# {:upsert true :multi true}))))
+    `(fn [doc#] (update ~coll ~match doc# ~m))
+    `(fn [match# doc#] (update ~coll match# doc# ~m))))
 
 (defmacro transact [coll [binding match] & body]
   `(let [~@(find-binding coll binding match)
          ~'insert (partial ~'insert ~coll)
          ~'remove (partial ~'remove ~coll)
-         ~'update ~(update-binding coll match)
-         ~'update-multi ~(update-multi-binding coll match)
-         ~'upsert ~(upsert-binding coll match)
-         ~'upsert-multi ~(upsert-multi-binding coll match)]
+         ~'update ~(update-match coll match {})
+         ~'update-multi ~(update-match coll match {:multi true})
+         ~'upsert ~(update-match coll match {:upsert true})
+         ~'upsert-multi ~(update-match coll match {:upsert true :multi true})]
         ~@body))
