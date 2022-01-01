@@ -25,11 +25,12 @@
     `(fn [match# doc#] (update ~coll match# doc# ~m))))
 
 (defmacro transact [coll [binding match] & body]
-  `(let [~@(find-binding coll binding match)
-         ~'insert (partial ~'insert ~coll)
-         ~'remove (partial ~'remove ~coll)
-         ~'update ~(update-match coll match {})
-         ~'update-multi ~(update-match coll match {:multi true})
-         ~'upsert ~(update-match coll match {:upsert true})
-         ~'upsert-multi ~(update-match coll match {:upsert true :multi true})]
-        ~@body))
+  (let [match (if (symbol? match) {:_id match} match)]
+    `(let [~@(find-binding coll binding match)
+           ~'insert (partial ~'insert ~coll)
+           ~'remove (partial ~'remove ~coll)
+           ~'update ~(update-match coll match {})
+           ~'update-multi ~(update-match coll match {:multi true})
+           ~'upsert ~(update-match coll match {:upsert true})
+           ~'upsert-multi ~(update-match coll match {:upsert true :multi true})]
+          ~@body)))
