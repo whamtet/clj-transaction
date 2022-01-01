@@ -1,7 +1,9 @@
 (ns clj-transaction.core
   (:refer-clojure :exclude [update remove])
   (:require
-    [monger.collection :as mc]))
+    [monger.collection :as mc])
+  (:import
+    org.bson.types.ObjectId))
 
 (def needed-functions '(find-one-as-map insert update remove find-one-as-map find-maps))
 (defmacro defpartials-for [db]
@@ -25,7 +27,7 @@
     `(fn [match# doc#] (update ~coll match# doc# ~m))))
 
 (defmacro transact [coll [binding match] & body]
-  (let [match (if (symbol? match) {:_id match} match)]
+  (let [match (if (symbol? match) {:_id (ObjectId. match)} match)]
     `(let [~@(find-binding coll binding match)
            ~'insert (partial ~'insert ~coll)
            ~'remove (partial ~'remove ~coll)
